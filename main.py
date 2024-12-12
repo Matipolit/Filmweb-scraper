@@ -110,18 +110,21 @@ def url_films_on_page(pageNum):
 
 films_detailed = []
 films = []
-if(len(argv) > 1):
-    if("--start-page" in argv[1]):
+if (len(argv) > 1):
+    if ("--start-page" in argv[1]):
         page = int(argv[1].split("=")[1])
         film_count = (page-1)*10
     else:
         page = 1
         film_count = 1
+    if ("--file-created" in argv):
+        created_films_csv = True
+    else:
+        created_films_csv = False
 else:
     page = 1
     film_count = 1
 
-created_films_csv = False
 
 while film_count <= 10000:
     print(f"Page: {page}")
