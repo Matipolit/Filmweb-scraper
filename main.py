@@ -94,6 +94,9 @@ if(len(argv) > 1):
     else:
         page = 1
         film_count = 1
+else:
+    page = 1
+    film_count = 1
     
 created_films_csv = False
 
