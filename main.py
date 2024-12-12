@@ -124,9 +124,12 @@ while film_count <= 10000:
             boxoffice_gross_el = [box_el for box_el in boxoffice_all.children if "na świecie" in box_el.text][0]
             boxoffice_gross = get_money_amount(boxoffice_gross_el.text.split("na świecie")[0])
             budget_element = response_html.find("span", string="budżet")
-            sibling = budget_element.find_next_sibling("span", class_='filmInfo__info')
-            budget_el = sibling.select_one("span")
-            budget = get_money_amount(budget_el.text)
+            if(budget_element):
+                sibling = budget_element.find_next_sibling("span", class_='filmInfo__info')
+                budget_el = sibling.select_one("span")
+                budget = get_money_amount(budget_el.text)
+            else:
+                budget = 0
 
             awards_link = response_html.select_one("a.awardsSection__link")["href"]
             if(awards_link):
