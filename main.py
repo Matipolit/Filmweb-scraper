@@ -138,6 +138,8 @@ while film_count <= 10000:
             title = response_html.select_one(".filmCoverSection__title").text
             print(f"Film nr {film_count}: {title}")
             year = int(response_html.select_one(".filmCoverSection__year").text)
+            if(year > 2024):
+                continue
             runtime = response_html.select_one(".filmCoverSection__duration").text
 
             if ("h" in runtime):
