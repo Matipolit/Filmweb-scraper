@@ -11,7 +11,8 @@ def get_money_amount(money_string):
 
 
 class Film_Detailed:
-    def __init__(self, year: int, award_amount: int, box_office: int, budget: int, time_mins: int, reviews: List[int]):
+    def __init__(self, title: str, year: int, award_amount: int, box_office: int | None, budget: int | None, time_mins: int, reviews: List[int]):
+        self.title = title
         self.year = year
         self.award_amount = award_amount
         self.box_office = box_office
@@ -21,7 +22,7 @@ class Film_Detailed:
 
 
 def save_detailed_films_to_csv(films: List[Film_Detailed], filename: str, new_file: bool):
-    headers = ['Year', 'Award Amount', 'Box Office', 'Budget', 'Time (mins)', 'Reviews']
+    headers = ["Title", "Year", "Award Amount", "Box Office", "Budget", "Time (mins)", "Reviews"]
     if (new_file):
         mode = "w"
     else:
@@ -34,18 +35,29 @@ def save_detailed_films_to_csv(films: List[Film_Detailed], filename: str, new_fi
             writer.writerow(headers)
 
         for film in films:
+            if (film.box_office is None):
+                box_office = "-"
+            else:
+                box_office = film.box_office
+
+            if (film.budget is None):
+                budget = "-"
+            else:
+                budget = film.budget
             writer.writerow([
+                film.title,
                 film.year,
                 film.award_amount,
-                film.box_office,
-                film.budget,
+                box_office,
+                budget,
                 film.time,
                 f'"{",".join(map(str, film.reviews))}"'
             ])
 
 
 class Film:
-    def __init__(self, year: int, award_amount: int, box_office: int, budget: int, time_mins: int, score_avg: int):
+    def __init__(self, title: str, year: int, award_amount: int, box_office: int | None, budget: int | None, time_mins: int, score_avg: int):
+        self.title = title
         self.year = year
         self.award_amount = award_amount
         self.box_office = box_office
@@ -55,7 +67,7 @@ class Film:
 
 
 def save_films_to_csv(films: List[Film], filename: str, new_file: bool):
-    headers = ['Year', 'Award Amount', 'Box Office', 'Budget', 'Time (mins)', 'Score']
+    headers = ["Title", "Year", "Award Amount", "Box Office", "Budget", "Time (mins)", "Score"]
     if (new_file):
         mode = "w"
     else:
@@ -68,11 +80,22 @@ def save_films_to_csv(films: List[Film], filename: str, new_file: bool):
             writer.writerow(headers)
 
         for film in films:
+
+            if (film.box_office is None):
+                box_office = "-"
+            else:
+                box_office = film.box_office
+
+            if (film.budget is None):
+                budget = "-"
+            else:
+                budget = film.budget
             writer.writerow([
+                film.title,
                 film.year,
                 film.award_amount,
-                film.box_office,
-                film.budget,
+                box_office,
+                budget,
                 film.time,
                 film.score_avg
             ])
@@ -97,12 +120,12 @@ if(len(argv) > 1):
 else:
     page = 1
     film_count = 1
-    
+
 created_films_csv = False
 
 while film_count <= 10000:
     print(f"Page: {page}")
-    
+
     start = time.time()
     film_list_response = requests.get(url_films_on_page(page))
     film_list_html = BeautifulSoup(film_list_response.text)
@@ -116,26 +139,46 @@ while film_count <= 10000:
             print(f"Film nr {film_count}: {title}")
             year = int(response_html.select_one(".filmCoverSection__year").text)
             runtime = response_html.select_one(".filmCoverSection__duration").text
-            hours = int(runtime.split("h")[0])
-            minutes = int(runtime.split(" ")[-1].split("m")[0])
-            runtime_mins = hours*60+minutes
-            genre = response_html.find("span", class_="linkButton__label", itemprop="genre").text
-            boxoffice_all = response_html.select_one("span.filmInfo__info.filmInfo__info--column")
-            if(boxoffice_all):
-                boxoffice_gross_el = [box_el for box_el in boxoffice_all.children if "na świecie" in box_el.text][0]
-                boxoffice_gross = get_money_amount(boxoffice_gross_el.text.split("na świecie")[0])
+
+            if ("h" in runtime):
+                hours = int(runtime.split("h")[0])
             else:
-                boxoffice_gross = 0
+                hours = 0
+
+            if ("m" in runtime):
+                minutes = int(runtime.split(" ")[-1].split("m")[0])
+            else:
+                minutes = 0
+            runtime_mins = hours*60+minutes
+
+            genre = response_html.find("span", class_="linkButton__label", itemprop="genre").text
+            
+            boxoffice_all = response_html.select_one("span.filmInfo__info.filmInfo__info--column")
+            if (boxoffice_all):
+                boxoffice_world_els = [box_el for box_el in boxoffice_all.children if "na świecie" in box_el.text]
+                if (len(boxoffice_world_els) > 0):
+                    boxoffice_gross_el = boxoffice_world_els[0]
+                    boxoffice_gross = get_money_amount(boxoffice_gross_el.text.split("na świecie")[0])
+                else:
+                    boxoffice_usa_els = [box_el for box_el in boxoffice_all.children if "w USA" in box_el.text]
+                    if (len(boxoffice_usa_els) > 0):
+                        boxoffice_usa_el = boxoffice_usa_els[0]
+                        boxoffice_gross = get_money_amount(boxoffice_usa_el.text.split("w USA")[0])
+                    else:
+                        boxoffice_gross = None
+            else:
+                boxoffice_gross = None
+            
             budget_element = response_html.find("span", string="budżet")
-            if(budget_element):
+            if (budget_element):
                 sibling = budget_element.find_next_sibling("span", class_='filmInfo__info')
                 budget_el = sibling.select_one("span")
                 budget = get_money_amount(budget_el.text)
             else:
-                budget = 0
+                budget = None
 
             awards_element = response_html.select_one("a.awardsSection__link")
-            if(awards_element):
+            if (awards_element):
                 awards_link = awards_element["href"]
                 awards_response = requests.get(base_url + awards_link)
                 awards_html = BeautifulSoup(awards_response.text)
@@ -170,10 +213,10 @@ while film_count <= 10000:
                     forum_page += 1
                     forum_response = requests.get(base_url + link["href"] + "/discussion?page=" + str(forum_page))
                     forum_html = BeautifulSoup(forum_response.text)
-                films_detailed.append(Film_Detailed(year, award_amount, boxoffice_gross, budget, runtime_mins, film_reviews))
+                films_detailed.append(Film_Detailed(title, year, award_amount, boxoffice_gross, budget, runtime_mins, film_reviews))
             else:
                 score = float(response_html.select_one("div.filmRating.filmRating--filmRate.filmRating--hasPanel")["data-rate"])
-                films.append(Film(year, award_amount, boxoffice_gross, budget, runtime_mins, score))
+                films.append(Film(title, year, award_amount, boxoffice_gross, budget, runtime_mins, score))
             film_count += 1
 
     end = time.time()
