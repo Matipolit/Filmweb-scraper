@@ -88,8 +88,10 @@ films_detailed = []
 films = []
 page = 1
 created_films_csv = False
+film_count = 1
 
-while len(films) < 10000:
+while film_count <= 10000:
+    print(f"Page: {page}")
     
     start = time.time()
     film_list_response = requests.get(url_films_on_page(page))
@@ -101,6 +103,7 @@ while len(films) < 10000:
             film_page_response = requests.get(base_url + link["href"])
             response_html = BeautifulSoup(film_page_response.text)
             title = response_html.select_one(".filmCoverSection__title").text
+            print(f"Film nr {film_count}: {title}")
             year = int(response_html.select_one(".filmCoverSection__year").text)
             runtime = response_html.select_one(".filmCoverSection__duration").text
             hours = int(runtime.split("h")[0])
@@ -128,13 +131,14 @@ while len(films) < 10000:
                 forum_html = BeautifulSoup(forum_response.text)
                 pagination_elements = forum_html.select("ul.pagination__list")
                 pagination_element = pagination_elements[-1]
-                print("pagination element")
-                print(pagination_element)
+                #print("pagination element")
+                #print(pagination_element)
                 pagination_buttons = [
                     li for li in pagination_element.find_all('li', class_='pagination__item')
                     if 'pagination__item--next' not in li.get('class', [])
                 ]
                 pages_amount = int(pagination_buttons[-1].select_one("a").text)
+                print(f"Visiting {pages_amount} forum pages...")
                 while (forum_page <= pages_amount):
                     print(f"forum page: {forum_page}")
                     topics_list = forum_html.select_one("div.forumTopicsList__items")
@@ -155,8 +159,10 @@ while len(films) < 10000:
     print(f"Page {page} finished, took {end-start} s")
     page += 1
     if (page == 1):
+        print("Saving detailed films to csv!")
         save_detailed_films_to_csv(films_detailed, "./films_detailed.csv", True)
     elif (page % 10 == 0):
+        print("Saving films to csv!")
         save_films_to_csv(films, "./films.csv", not created_films_csv)
         created_films_csv = True
         films = []
