@@ -126,9 +126,12 @@ while film_count <= 10000:
             budget = get_money_amount(budget_el.text)
 
             awards_link = response_html.select_one("a.awardsSection__link")["href"]
-            awards_response = requests.get(base_url + awards_link)
-            awards_html = BeautifulSoup(awards_response.text)
-            award_amount = int(awards_html.select_one("span.page__headerCounter").text)
+            if(awards_link):
+                awards_response = requests.get(base_url + awards_link)
+                awards_html = BeautifulSoup(awards_response.text)
+                award_amount = int(awards_html.select_one("span.page__headerCounter").text)
+            else:
+                award_amount = 0
 
             if (page == 1):
                 # reviews
