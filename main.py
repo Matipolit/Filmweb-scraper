@@ -220,8 +220,12 @@ while film_count <= 10000:
                     forum_html = BeautifulSoup(forum_response.text)
                 films_detailed.append(Film_Detailed(title, year, award_amount, boxoffice_gross, budget, runtime_mins, film_reviews))
             else:
-                score = float(response_html.select_one("div.filmRating.filmRating--filmRate.filmRating--hasPanel")["data-rate"])
-                films.append(Film(title, year, award_amount, boxoffice_gross, budget, runtime_mins, score))
+                score_el = response_html.select_one("div.filmRating.filmRating--filmRate.filmRating--hasPanel")
+                if(score_el):
+                    score = float(response_html.select_one("div.filmRating.filmRating--filmRate.filmRating--hasPanel")["data-rate"])
+                    films.append(Film(title, year, award_amount, boxoffice_gross, budget, runtime_mins, score))
+                else:
+                    continue
             film_count += 1
 
     end = time.time()
