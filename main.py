@@ -17,7 +17,7 @@ class Film_Detailed:
         self.award_amount = award_amount
         self.box_office = box_office
         self.budget = budget
-        self.time = time_mins
+        self.time_mins = time_mins
         self.reviews = reviews
 
 
@@ -67,7 +67,7 @@ class Film:
         self.award_amount = award_amount
         self.box_office = box_office
         self.budget = budget
-        self.time = time_mins
+        self.time_mins = time_mins
         self.score_avg = score_avg
 
 
