@@ -158,8 +158,8 @@ while page <= max_page:
             year = int(response_html.select_one(".filmCoverSection__year").text)
             if(year > 2024):
                 continue
-            runtime_el = response_html.select_one(".filmCoverSectino__duration")
-            if(runtime_el):
+            runtime_el = response_html.select_one(".filmCoverSection__duration")
+            if (runtime_el):
                 runtime = runtime_el.text
                 if ("h" in runtime):
                     hours = int(runtime.split("h")[0])
@@ -173,11 +173,9 @@ while page <= max_page:
                 runtime_mins = hours*60+minutes
             else:
                 runtime_mins = None
-            runtime = response_html.select_one(".filmCoverSection__duration").text
-
 
             genre = response_html.find("span", class_="linkButton__label", itemprop="genre").text
-            
+
             boxoffice_all = response_html.select_one("span.filmInfo__info.filmInfo__info--column")
             if (boxoffice_all):
                 boxoffice_world_els = [box_el for box_el in boxoffice_all.children if "na świecie" in box_el.text]
