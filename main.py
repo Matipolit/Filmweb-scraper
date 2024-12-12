@@ -3,6 +3,7 @@ import time
 import requests
 from typing import List
 import csv
+from sys import argv
 
 def get_money_amount(money_string):
     return int(money_string.split("$")[1].replace(" ", ""))
@@ -86,9 +87,15 @@ def url_films_on_page(pageNum):
 
 films_detailed = []
 films = []
-page = 1
+if(len(argv) > 1):
+    if("--start-page" in argv[1]):
+        page = int(argv[1].split("=")[1])
+        film_count = (page-1)*10
+    else:
+        page = 1
+        film_count = 1
+    
 created_films_csv = False
-film_count = 1
 
 while film_count <= 10000:
     print(f"Page: {page}")
@@ -154,6 +161,7 @@ while film_count <= 10000:
             else:
                 score = float(response_html.select_one("div.filmRating.filmRating--filmRate.filmRating--hasPanel")["data-rate"])
                 films.append(Film(year, award_amount, boxoffice_gross, budget, runtime_mins, score))
+            film_count += 1
 
     end = time.time()
     print(f"Page {page} finished, took {end-start} s")
