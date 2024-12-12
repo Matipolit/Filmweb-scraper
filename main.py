@@ -121,8 +121,11 @@ while film_count <= 10000:
             runtime_mins = hours*60+minutes
             genre = response_html.find("span", class_="linkButton__label", itemprop="genre").text
             boxoffice_all = response_html.select_one("span.filmInfo__info.filmInfo__info--column")
-            boxoffice_gross_el = [box_el for box_el in boxoffice_all.children if "na świecie" in box_el.text][0]
-            boxoffice_gross = get_money_amount(boxoffice_gross_el.text.split("na świecie")[0])
+            if(boxoffice_all):
+                boxoffice_gross_el = [box_el for box_el in boxoffice_all.children if "na świecie" in box_el.text][0]
+                boxoffice_gross = get_money_amount(boxoffice_gross_el.text.split("na świecie")[0])
+            else:
+                boxoffice_gross = 0
             budget_element = response_html.find("span", string="budżet")
             if(budget_element):
                 sibling = budget_element.find_next_sibling("span", class_='filmInfo__info')
@@ -131,8 +134,9 @@ while film_count <= 10000:
             else:
                 budget = 0
 
-            awards_link = response_html.select_one("a.awardsSection__link")["href"]
-            if(awards_link):
+            awards_element = response_html.select_one("a.awardsSection__link")
+            if(awards_element):
+                awards_link = awards_element["href"]
                 awards_response = requests.get(base_url + awards_link)
                 awards_html = BeautifulSoup(awards_response.text)
                 award_amount = int(awards_html.select_one("span.page__headerCounter").text)
