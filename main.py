@@ -11,7 +11,7 @@ def get_money_amount(money_string):
 
 
 class Film_Detailed:
-    def __init__(self, title: str, year: int, award_amount: int, box_office: int | None, budget: int | None, time_mins: int, reviews: List[int]):
+    def __init__(self, title: str, year: int, award_amount: int, box_office: int | None, budget: int | None, time_mins: int | None, reviews: List[int]):
         self.title = title
         self.year = year
         self.award_amount = award_amount
@@ -44,13 +44,18 @@ def save_detailed_films_to_csv(films: List[Film_Detailed], filename: str, new_fi
                 budget = "-"
             else:
                 budget = film.budget
+
+            if(film.time_mins is None):
+                time = "-"
+            else:
+                time = film.time_mins
             writer.writerow([
                 film.title,
                 film.year,
                 film.award_amount,
                 box_office,
                 budget,
-                film.time,
+                time,
                 f'"{",".join(map(str, film.reviews))}"'
             ])
 
@@ -90,13 +95,19 @@ def save_films_to_csv(films: List[Film], filename: str, new_file: bool):
                 budget = "-"
             else:
                 budget = film.budget
+                
+            if(film.time_mins is None):
+                time = "-"
+            else:
+                time = film.time_mins
+                
             writer.writerow([
                 film.title,
                 film.year,
                 film.award_amount,
                 box_office,
                 budget,
-                film.time,
+                time,
                 film.score_avg
             ])
 
@@ -110,11 +121,14 @@ def url_films_on_page(pageNum):
 
 films_detailed = []
 films = []
+max_page = 1000
 if (len(argv) > 1):
-    if ("--start-page" in argv[1]):
-        page = int(argv[1].split("=")[1])
+    if (argv[1]):
+        page = int(argv[1])
         film_count = (page-1)*10
     else:
+        if (len(argv) > 2):
+            max_page = int(argv[2])
         page = 1
         film_count = 1
     if ("--file-created" in argv):
@@ -126,7 +140,8 @@ else:
     film_count = 1
 
 
-while film_count <= 10000:
+
+while page <= max_page:
     print(f"Page: {page}")
 
     start = time.time()
@@ -143,18 +158,23 @@ while film_count <= 10000:
             year = int(response_html.select_one(".filmCoverSection__year").text)
             if(year > 2024):
                 continue
+            runtime_el = response_html.select_one(".filmCoverSectino__duration")
+            if(runtime_el):
+                runtime = runtime_el.text
+                if ("h" in runtime):
+                    hours = int(runtime.split("h")[0])
+                else:
+                    hours = 0
+
+                if ("m" in runtime):
+                    minutes = int(runtime.split(" ")[-1].split("m")[0])
+                else:
+                    minutes = 0
+                runtime_mins = hours*60+minutes
+            else:
+                runtime_mins = None
             runtime = response_html.select_one(".filmCoverSection__duration").text
 
-            if ("h" in runtime):
-                hours = int(runtime.split("h")[0])
-            else:
-                hours = 0
-
-            if ("m" in runtime):
-                minutes = int(runtime.split(" ")[-1].split("m")[0])
-            else:
-                minutes = 0
-            runtime_mins = hours*60+minutes
 
             genre = response_html.find("span", class_="linkButton__label", itemprop="genre").text
             
@@ -230,7 +250,6 @@ while film_count <= 10000:
 
     end = time.time()
     print(f"Page {page} finished, took {end-start} s")
-    page += 1
     if (page == 1):
         print("Saving detailed films to csv!")
         save_detailed_films_to_csv(films_detailed, "./films_detailed.csv", True)
@@ -239,5 +258,6 @@ while film_count <= 10000:
         save_films_to_csv(films, "./films.csv", not created_films_csv)
         created_films_csv = True
         films = []
+    page += 1
 
 
